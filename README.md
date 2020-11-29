@@ -1,16 +1,45 @@
 # shafs
 
-SHA256 hash a directory tree, saving paths and hashes to a SQLite database
+SHA256 hash a directory tree, saving paths, file sizes and hashes to a SQLite database
+
+`shafs` can be used to find duplicate files, sort files by size and so forth
 
 
-Usage:
+## Installation
+
+    git clone https://github.com/ojrdevcom/shafs.git
+    autoconf
+    automake
+    ./configure
+    make
+    sudo make install
+
+
+
+## Usage
 
     shafs <src_dr> <sqlite_file>
 
 
-Example:
+
+## Example
 
     shafs /usr/lib ~/usrlib_hashed.db
+
+
+
+## Finding Duplicate eBooks
+
+    $ shafs ~/ebooks/ ~/ebooks.db
+    $ sqlite3 ~/ebooks.db
+    sqlite> select filepath, count(*) as duplicates from shafs group by filehash having duplicates > 0 order by duplicates desc;
+
+
+
+## Finding Largest Files
+
+    sqlite> select * from shafs order by filesize desc;
+
 
 
 # License
@@ -18,7 +47,11 @@ Example:
 shafs is released under the terms of the MIT license, see attached /LICENSE file
 
 
+
+
 # Peace :)
 
-* https://crypto.bi
-* https://decenbr.com
+Shoutouts:
+
+* https://crypto.bi (English)
+* https://decenbr.com (Portuguese)
