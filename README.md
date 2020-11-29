@@ -8,7 +8,8 @@ SHA256 hash a directory tree, saving paths, file sizes and hashes to a SQLite da
 ## Installation
 
     git clone https://github.com/ojrdevcom/shafs.git
-    automake --add-missing    
+    cd shafs
+    autoreconf --install
     ./configure
     make
     sudo make install
