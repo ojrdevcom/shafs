@@ -166,7 +166,9 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
             exit(EXIT_FAILURE);
         }
         strncat(newf, fil, strlen(fil));
-        strncat(newf, "/", 1);
+        if (strcmp(fil, "/")) {
+            strncat(newf, "/", 1);
+        }
         strncat(newf, dent->d_name, strlen(dent->d_name));
         struct stat st;
         stat(newf, &st);
