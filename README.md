@@ -44,7 +44,7 @@ SHA256 hash a directory tree, saving paths, file sizes and hashes to a SQLite da
 
 # License
 
-shafs is released under the terms of the MIT license, see attached /LICENSE file
+shafs is released under the terms of the MIT license, see attached LICENSE file
 
 
 
