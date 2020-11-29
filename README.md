@@ -1,16 +1,16 @@
 # shafs
 
-SHA256 hash a directory tree, saving paths and hashes to a SQLite database
+SHA256 files in a directory tree, saving paths and hashes to a SQLite database
 
 
 Usage:
 
-    shafs <src_dr> <sqlite_file>
+    shafs [-v] <src_dr> <sqlite_file>
 
 
 Example:
 
-    shafs /usr/lib ~/usrlib_hashed.db
+    shafs -v /usr/lib ~/usrlib_hashed.db
 
 
 # License
