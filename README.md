@@ -4,6 +4,16 @@ SHA256 hash a directory tree, saving paths, file sizes and hashes to a SQLite da
 
 `shafs` can be used to find duplicate files, sort files by size and so forth
 
+## Dependencies
+
+shafs requires sqlite3
+
+On Ubuntu:
+
+    sudo apt install sqlite3
+    sudo apt install libsqlite3-dev
+
+Please check your distribution for the appropriate packages.
 
 ## Installation
 
