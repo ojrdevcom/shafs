@@ -21,6 +21,9 @@
 
 #include "sha256.h"
 
+#define SHAFS_HASH_LEN 32
+#define SHAFS_HASH_STR_LEN 65
+
 static char *shafs_sql_insert = "INSERT INTO shafs (filepath, filehash, filesize) VALUES(?, ?, ?)";
 unsigned char shafs_verbose = 0;
 
@@ -51,8 +54,11 @@ char *shafs_slurp_file(char *fil, struct stat *st_ifil) {
     fclose(f);
 
     if (ret != st_ifil->st_size) {
-        if (shafs_verbose)
+
+        if (shafs_verbose) {
             fprintf(stderr, "shafs_slurp_file: ERROR Reading file %s. Read %lu expected %lu\n", fil, ret, st_ifil->st_size);
+        }
+            
         free(buf);        
         return NULL;
     }
@@ -62,17 +68,17 @@ char *shafs_slurp_file(char *fil, struct stat *st_ifil) {
 
 char *shafs_file_hash(char *fil, struct stat *st_ifil) {
 
-    unsigned char *hash_buf = calloc(32, 1);
-    char *hash_buf_str = calloc(65, 1);
+    unsigned char *hash_buf = calloc(SHAFS_HASH_LEN, 1);
+    char *hash_buf_str = calloc(SHAFS_HASH_STR_LEN, 1);
     char *contents;
 
     if (!hash_buf) {
-        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate 32 bytes for SHA256 bytes hash of %s\n", fil);
+        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate memory for the hash of %s\n", fil);
         exit(EXIT_FAILURE);
     }
 
     if (!hash_buf_str) {
-        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate 65 bytes for SHA256 string hash of %s\n", fil);
+        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate memory for the hex string hash of %s\n", fil);
         exit(EXIT_FAILURE);
     }
 
@@ -89,7 +95,7 @@ char *shafs_file_hash(char *fil, struct stat *st_ifil) {
 	sha256_update(&ctx, (const BYTE *)contents, st_ifil->st_size);
 	sha256_final(&ctx, hash_buf);    
 
-    for (int i=0;i<32;i++) {
+    for (int i=0;i<SHAFS_HASH_LEN;i++) {
         int offs = i << 1;
         unsigned char c = hash_buf[i];
         sprintf(hash_buf_str + offs, "%02x", c);
@@ -182,7 +188,7 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
         if (strcmp(fil, "/")) {
             strcat(newf, "/");
         }
-        
+
         strcat(newf, dent->d_name);        
         ret = stat(newf, &st);
         if (ret) {
@@ -240,7 +246,7 @@ int main(int argc, char **argv){
         return EXIT_FAILURE;
     }    
 
-    sqlite3_exec(db, "CREATE TABLE shafs(filepath VARCHAR(4096) PRIMARY KEY, filehash CHAR(32), filesize INTEGER NOT NULL DEFAULT 0)", NULL, NULL, NULL);
+    sqlite3_exec(db, "CREATE TABLE shafs(filepath VARCHAR(4096) PRIMARY KEY, filehash CHAR(64), filesize INTEGER NOT NULL DEFAULT 0)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filehash ON shafs(filehash)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filesize ON shafs(filesize)", NULL, NULL, NULL);
 

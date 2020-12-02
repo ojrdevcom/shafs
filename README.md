@@ -1,6 +1,6 @@
 # shafs
 
-SHA256 hash a directory tree, saving paths, file sizes and hashes to a SQLite database
+SHA256 every file in a directory tree, saving paths, file sizes and hashes to a SQLite database
 
 `shafs` can be used to find duplicate files, sort files by size and so forth
 
@@ -15,26 +15,38 @@ On Ubuntu:
 
 Please check your distribution for the appropriate packages.
 
-## Installation
+## Build
 
     git clone https://github.com/ojrdevcom/shafs.git
     cd shafs
+    ./build.sh
+
+## Installation
+
+To install locally, uncomment last line in `build.sh` and re-run it or run :
+
+    sudo make install
+
+## Manual Build + Install
+
+    git clone https://github.com/ojrdevcom/shafs.git
+    cd shafs
+    mkdir -p m4
     autoreconf --install
     ./configure
     make
-    sudo make install
-
+    sudo make install    
 
 
 ## Usage
 
-    shafs <src_dr> <sqlite_file>
+    shafs [-v] <src_dr> <sqlite_file>
 
 
 
 ## Example
 
-    shafs /usr/lib ~/usrlib_hashed.db
+    shafs -v /usr/lib ~/usrlib_hashed.db
 
 
 
@@ -54,8 +66,9 @@ Please check your distribution for the appropriate packages.
 
 # License
 
-shafs is released under the terms of the MIT license, see attached LICENSE file
+shafs is released under the terms of the MIT license 
 
+See attached LICENSE file for details
 
 
 

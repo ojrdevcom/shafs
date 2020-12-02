@@ -4,4 +4,6 @@ mkdir -p m4
 autoreconf --install
 ./configure
 make
-sudo make install
+
+# uncomment to install
+# sudo make install
