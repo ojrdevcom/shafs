@@ -1,5 +1,5 @@
 /*
-    shafs - SHA256 an entire filesystem, saving hashes to a sqlite database
+    shafs - SHA256 every file under a filesystem, saving hashes, file sizes and paths to a sqlite database
 
     Author: @ojrdev
     https://ojrdev.com
