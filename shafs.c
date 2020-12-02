@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <sqlite3.h>
 #include <unistd.h>
+#include <linux/limits.h>
 
 #include "sha256.h"
 
@@ -138,6 +139,7 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
 
     DIR *dir;
     struct dirent *dent;
+    int ret = 0;
 
     if (!S_ISDIR(st_idir->st_mode)) {
         shafs_work_file(fil, st_idir, db);        
@@ -154,24 +156,43 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
     dent = readdir(dir);
     while (dent) {
 
-        if (!strncmp(dent->d_name, "." , 1) || !strncmp(dent->d_name, ".." , 2)) {
+        struct stat st;
+
+        if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, "..")) {
             dent = readdir(dir);
             continue;
         }
 
         size_t fil_len = strlen(fil) + strlen(dent->d_name) + 2;
+
+        if (fil_len > PATH_MAX) {
+            if (shafs_verbose) {
+                printf("ERROR: Filename too long - skipping. Filesystem loop? (%s/%s)\n", fil, dent->d_name);
+            }  
+            continue;
+        }
+
         char *newf = calloc(fil_len, 1);
         if (!newf) {
             fprintf(stderr, "shafs_walk_dir: FATAL: Out of memory while processing %s\n", fil);
             exit(EXIT_FAILURE);
         }
-        strncat(newf, fil, strlen(fil));
+        
+        strcat(newf, fil);
         if (strcmp(fil, "/")) {
-            strncat(newf, "/", 1);
+            strcat(newf, "/");
         }
-        strncat(newf, dent->d_name, strlen(dent->d_name));
-        struct stat st;
-        stat(newf, &st);
+        
+        strcat(newf, dent->d_name);        
+        ret = stat(newf, &st);
+        if (ret) {
+            fprintf(stderr, "shafs_walk_dir stat %s", newf);
+            perror("");
+            free(newf);
+            dent = readdir(dir);
+            continue;
+        }
+
         shafs_walk_dir(newf, &st, db);
         free(newf);
         dent = readdir(dir);
@@ -198,6 +219,20 @@ int main(int argc, char **argv){
         return shafs_usage();
     }    
 
+    if (strlen(argv[optind]) > PATH_MAX) {
+        if (shafs_verbose) {
+            printf("FATAL: Source path name too long. (%s)\n", argv[optind+1]);
+        }  
+        return EXIT_FAILURE;
+    }
+
+    if (strlen(argv[optind+1]) > PATH_MAX) {
+        if (shafs_verbose) {
+            printf("FATAL: Database file path too long. (%s)\n", argv[optind+1]);
+        }  
+        return EXIT_FAILURE;
+    }
+
     ret = sqlite3_open(argv[optind+1], &db);
     if (ret != SQLITE_OK) {        
         fprintf(stderr, "main: FATAL: Error opening DB %s: %s\n", argv[optind+1], sqlite3_errmsg(db));
@@ -209,7 +244,12 @@ int main(int argc, char **argv){
     sqlite3_exec(db, "CREATE INDEX by_filehash ON shafs(filehash)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filesize ON shafs(filesize)", NULL, NULL, NULL);
 
-    stat(argv[optind], &st_idir);
+    ret = stat(argv[optind], &st_idir);
+    if (ret) {
+        perror("Error opening source directory");
+        return EXIT_FAILURE;
+    }
+
     shafs_walk_dir(argv[optind], &st_idir, db);
     sqlite3_close(db);
 
