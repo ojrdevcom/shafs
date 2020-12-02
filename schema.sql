@@ -3,7 +3,7 @@
 
 CREATE TABLE shafs(
     filepath VARCHAR(4096) PRIMARY KEY, -- sqlite doesnt care
-    filehash CHAR(32),
+    filehash CHAR(64),
     filesize INTEGER NOT NULL DEFAULT 0
 );
 
