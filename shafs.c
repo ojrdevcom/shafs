@@ -191,9 +191,11 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
 
         strcat(newf, dent->d_name);        
         ret = stat(newf, &st);
-        if (ret) {
-            fprintf(stderr, "shafs_walk_dir stat %s: ", newf);
-            perror("");
+        if (ret) {            
+            if (shafs_verbose) {
+                fprintf(stderr, "shafs_walk_dir stat %s: ", newf);
+                perror("");
+            }
             free(newf);
             dent = readdir(dir);
             continue;
