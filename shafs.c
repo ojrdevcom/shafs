@@ -13,7 +13,7 @@
 #include "shafs.h"
 #include "shafs_file_hash.h"
 
-static char *shafs_sql_insert = "INSERT INTO shafs (filepath, filehash, filesize) VALUES(?, ?, ?)";
+static char *shafs_sql_insert = "INSERT INTO shafs (filepath, filehash, filesize) VALUES(?, ?, ?) ON CONFLICT(filepath) DO UPDATE SET filehash = ?, filesize = ?";
 unsigned char shafs_verbose = 0;
 
 static int shafs_usage() {    
@@ -45,6 +45,8 @@ void shafs_work_file(char *fil, struct stat *st_ifil, sqlite3 *db){
         sqlite3_bind_text(stmt, 1, fil, strlen(fil), NULL);
         sqlite3_bind_text(stmt, 2, hash, strlen(hash), NULL);
         sqlite3_bind_int(stmt, 3, st_ifil->st_size);
+        sqlite3_bind_text(stmt, 4, hash, strlen(hash), NULL);
+        sqlite3_bind_int(stmt, 5, st_ifil->st_size);
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
     } else {    
@@ -62,7 +64,7 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
     int ret = 0;
 
     if (shafs_verbose)
-        fprintf(stderr, "shafs_walk_dir(%s)\n", fil);
+        printf("shafs_walk_dir(%s)\n", fil);
 
 
     if (!S_ISDIR(st_idir->st_mode)) {

@@ -29,8 +29,11 @@ char *shafs_slurp_file(char *fil, struct stat *st_ifil) {
 
     f = fopen(fil, "rb");
     if (!f) {
-        if (shafs_verbose)
-            fprintf(stderr, "shafs_slurp_file: Cannot open file %s\n", fil);  
+        if (shafs_verbose) {
+            perror("shafs_slurp_file");
+            fprintf(stderr, "shafs_slurp_file: Cannot open file %s\n", fil);              
+        }
+            
         return NULL;        
     }
 

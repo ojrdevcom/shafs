@@ -22,6 +22,10 @@
 
 #define SHAFS_HASH_LEN 32
 #define SHAFS_HASH_STR_LEN 65
+#define SHAFS_HASH_BUFFSIZ (1024 * 1024)
+
+// If file is larger than this, stream-process SHA256.
+#define SHAFS_SINGLE_FILE_SLURP_LIMIT ((1024 * 1024) * 256)
 
 char *shafs_file_hash(char *fil, struct stat *st_ifil);
 
