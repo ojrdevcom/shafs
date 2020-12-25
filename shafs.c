@@ -10,19 +10,8 @@
 
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <sqlite3.h>
-#include <unistd.h>
-#include <linux/limits.h>
-
-#include "sha256.h"
-
-#define SHAFS_HASH_LEN 32
-#define SHAFS_HASH_STR_LEN 65
+#include "shafs.h"
+#include "shafs_file_hash.h"
 
 static char *shafs_sql_insert = "INSERT INTO shafs (filepath, filehash, filesize) VALUES(?, ?, ?)";
 unsigned char shafs_verbose = 0;
@@ -30,81 +19,6 @@ unsigned char shafs_verbose = 0;
 static int shafs_usage() {    
     fprintf(stderr, "Usage: shafs <src_dir> <sqlite_file>\n");
     return EXIT_FAILURE;
-}
-
-char *shafs_slurp_file(char *fil, struct stat *st_ifil) {
-
-    FILE *f;
-    size_t ret;
-    char *buf = calloc(st_ifil->st_size, 1);
-
-    if (!buf) {
-        fprintf(stderr, "shafs_slurp_file: FATAL: Cannot allocate %ld bytes for file %s\n", st_ifil->st_size, fil);
-        exit(EXIT_FAILURE);
-    }
-
-    f = fopen(fil, "rb");
-    if (!f) {
-        if (shafs_verbose)
-            fprintf(stderr, "shafs_slurp_file: Cannot open file %s\n", fil);  
-        return NULL;        
-    }
-
-    ret = fread(buf, 1, st_ifil->st_size, f);
-    fclose(f);
-
-    if (ret != st_ifil->st_size) {
-
-        if (shafs_verbose) {
-            fprintf(stderr, "shafs_slurp_file: ERROR Reading file %s. Read %lu expected %lu\n", fil, ret, st_ifil->st_size);
-        }
-            
-        free(buf);        
-        return NULL;
-    }
-
-    return buf;
-}
-
-char *shafs_file_hash(char *fil, struct stat *st_ifil) {
-
-    unsigned char *hash_buf = calloc(SHAFS_HASH_LEN, 1);
-    char *hash_buf_str = calloc(SHAFS_HASH_STR_LEN, 1);
-    char *contents;
-
-    if (!hash_buf) {
-        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate memory for the hash of %s\n", fil);
-        exit(EXIT_FAILURE);
-    }
-
-    if (!hash_buf_str) {
-        fprintf(stderr, "shafs_file_hash: FATAL: Cannot allocate memory for the hex string hash of %s\n", fil);
-        exit(EXIT_FAILURE);
-    }
-
-    contents = shafs_slurp_file(fil, st_ifil);    
-
-    if (!contents) {
-        if (shafs_verbose)
-            fprintf(stderr, "shafs_file_hash: Error reading %s\n", fil);
-        return NULL;
-    }
-
-    SHA256_CTX ctx;
-  	sha256_init(&ctx);
-	sha256_update(&ctx, (const BYTE *)contents, st_ifil->st_size);
-	sha256_final(&ctx, hash_buf);    
-
-    for (int i=0;i<SHAFS_HASH_LEN;i++) {
-        int offs = i << 1;
-        unsigned char c = hash_buf[i];
-        sprintf(hash_buf_str + offs, "%02x", c);
-    }
-
-    free(contents);
-    free(hash_buf);
-    
-    return hash_buf_str;
 }
 
 void shafs_work_file(char *fil, struct stat *st_ifil, sqlite3 *db){
@@ -146,6 +60,10 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
     DIR *dir;
     struct dirent *dent;
     int ret = 0;
+
+    if (shafs_verbose)
+        fprintf(stderr, "shafs_walk_dir(%s)\n", fil);
+
 
     if (!S_ISDIR(st_idir->st_mode)) {
         shafs_work_file(fil, st_idir, db);        
@@ -248,6 +166,7 @@ int main(int argc, char **argv){
         return EXIT_FAILURE;
     }    
 
+    // Ignores errors if tables already exist. Should probably improve this.
     sqlite3_exec(db, "CREATE TABLE shafs(filepath VARCHAR(4096) PRIMARY KEY, filehash CHAR(64), filesize INTEGER NOT NULL DEFAULT 0)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filehash ON shafs(filehash)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filesize ON shafs(filesize)", NULL, NULL, NULL);
