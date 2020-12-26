@@ -110,7 +110,7 @@ void shafs_walk_dir(char *fil, struct stat *st_idir, sqlite3 *db) {
         }
 
         strcat(newf, dent->d_name);        
-        ret = stat(newf, &st);
+        ret = lstat(newf, &st);
         if (ret) {            
             if (shafs_verbose) {
                 fprintf(stderr, "shafs_walk_dir stat %s: ", newf);
@@ -133,6 +133,14 @@ int main(int argc, char **argv){
     int c, ret, ix, cnti=0;
     struct stat st_idir;
     sqlite3 *db;
+    time_t start_time;
+    time_t end_time;
+    struct tm * start_timeinfo;
+    struct tm * end_timeinfo;
+
+    time(&start_time);
+    start_timeinfo = localtime(&start_time);
+    fprintf(stderr, "Start %s", asctime(start_timeinfo));
 
     while ((c = getopt (argc, argv, "v")) != -1) {
         switch (c) {
@@ -173,7 +181,7 @@ int main(int argc, char **argv){
     sqlite3_exec(db, "CREATE INDEX by_filehash ON shafs(filehash)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE INDEX by_filesize ON shafs(filesize)", NULL, NULL, NULL);
 
-    ret = stat(argv[optind], &st_idir);
+    ret = lstat(argv[optind], &st_idir);
     if (ret) {
         perror("Error opening source directory");
         return EXIT_FAILURE;
@@ -181,6 +189,11 @@ int main(int argc, char **argv){
 
     shafs_walk_dir(argv[optind], &st_idir, db);
     sqlite3_close(db);
+
+    time(&end_time);
+    end_timeinfo = localtime(&end_time);
+    
+    fprintf(stderr, "End   %s", asctime(end_timeinfo));
 
     return EXIT_SUCCESS;
 }

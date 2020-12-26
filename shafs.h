@@ -21,5 +21,6 @@
 #include <sqlite3.h>
 #include <unistd.h>
 #include <linux/limits.h>
+#include <time.h>
 
 #endif

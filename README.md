@@ -74,6 +74,8 @@ See attached LICENSE file for details
 
 # Peace :)
 
+Author: @ojrdev
+
 Shoutouts:
 
 * https://crypto.bi (English)
