@@ -1,6 +1,8 @@
 # Binaries
 shafs
 
+tmp/
+
 # Generated
 config.h
 

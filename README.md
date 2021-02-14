@@ -6,7 +6,7 @@ SHA256 every file in a directory tree, saving paths, file sizes and hashes to a 
 
 ## Dependencies
 
-shafs requires sqlite3
+shafs requires a valid GNU standard C build system and sqlite3 version > 3.24.0*
 
 On Ubuntu:
 
@@ -14,6 +14,8 @@ On Ubuntu:
     sudo apt install libsqlite3-dev
 
 Please check your distribution for the appropriate packages.
+
+*Note: SQLite3 versions < 3.24.0 will not work unless the SQL queries are modified to not use the [UPSERT](https://www.sqlite.org/draft/lang_UPSERT.html) feature. This might generate lots of duplicates in the DB, which you'll need to take into consideration in your queries.
 
 ## Build
 
